@@ -10,4 +10,4 @@ COPY ingredients.csv /app/ingredients.csv
 
 COPY . .
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "foodgram.wsgi"]
+CMD ["gunicorn", "--bind", "0.0.0.0:9000", "foodgram.wsgi"]

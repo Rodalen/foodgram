@@ -15,7 +15,8 @@ from .serializers import (IngredientSerializer, RecipeCreateSerializer,
                           RecipeSerializer, TagSerializer)
 
 
-class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
+                 mixins.RetrieveModelMixin):
     """Вьюсет для тэгов."""
     permission_classes = [permissions.AllowAny]
     queryset = Tag.objects.all()
@@ -23,7 +24,8 @@ class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.Retrieve
     pagination_class = None
 
 
-class IngredientViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin):
+class IngredientViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
+                        mixins.RetrieveModelMixin):
     """Вьюсет для ингредиентов."""
     permission_classes = [permissions.AllowAny]
     queryset = Ingredient.objects.all()
@@ -35,9 +37,12 @@ class IngredientViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.R
         name = self.request.query_params.get('name')
         if name:
             name.lower()
-            queryset = queryset.filter(models.Q(name__istartswith=name) | models.Q(name__icontains=name))
+            queryset = queryset.filter(
+                models.Q(name__istartswith=name)
+                | models.Q(name__icontains=name)
+            )
         return queryset
-    
+
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет для рецептов."""
@@ -49,7 +54,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Фильтрация по тэгам, избранному, корзине."""
         queryset = super().get_queryset()
-        
+
         tags = self.request.query_params.getlist('tags')
         if tags:
             queryset = queryset.filter(tags__slug__in=tags).distinct()
@@ -59,10 +64,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             if is_favorited.lower() in ['true', '1']:
                 queryset = queryset.filter(is_favorited=self.request.user)
 
-        is_in_shopping_cart = self.request.query_params.get('is_in_shopping_cart')
+        is_in_shopping_cart = self.request.query_params.get(
+            'is_in_shopping_cart'
+        )
         if is_in_shopping_cart and self.request.user.is_authenticated:
             if is_in_shopping_cart.lower() in ['true', '1']:
-                queryset = queryset.filter(is_in_shopping_cart=self.request.user)
+                queryset = queryset.filter(
+                    is_in_shopping_cart=self.request.user
+                )
 
         return queryset
 
@@ -84,17 +93,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe = serializer.save()
         else:
             recipe = serializer.save(author=self.request.user)
-        output_serializer = RecipeSerializer(recipe, context=self.get_serializer_context())
-        return Response(output_serializer.data, status=status.HTTP_200_OK if instance else status.HTTP_201_CREATED)
+        output_serializer = RecipeSerializer(
+            recipe, context=self.get_serializer_context()
+        )
+        return Response(
+            output_serializer.data,
+            status=status.HTTP_200_OK if instance else status.HTTP_201_CREATED
+        )
 
     def create(self, request, *args, **kwargs):
         return self.create_or_update(request)
-    
+
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         return self.create_or_update(request, instance=instance)
-    
-    @action(detail=False, methods=['GET'], url_path='(?P<recipe_id>\d+)/get-link')
+
+    @action(detail=False, methods=['GET'],
+            url_path='(?P<recipe_id>\\d+)/get-link')
     def get_short_link(self, request, recipe_id):
         """Получение (создание) короткой ссылки на рецепт."""
         recipe = get_object_or_404(Recipe, pk=recipe_id)
@@ -104,8 +119,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe.save()
         url = f"{request.get_host()}/s/{recipe.short_link}"
         return Response({'short-link': url}, status=status.HTTP_200_OK)
-    
-    @action(detail=False, methods=['POST', 'DELETE'], url_path='(?P<recipe_id>\d+)/favorite')
+
+    @action(detail=False, methods=['POST', 'DELETE'],
+            url_path='(?P<recipe_id>\\d+)/favorite')
     def add_favorite(self, request, recipe_id):
         """Добавление в избранное."""
         user = request.user
@@ -119,11 +135,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             if request.method == 'POST':
                 recipe.is_favorited.add(user)
                 serializer = RecipeFavoriteShoppingCartSerializer(recipe)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(
+                    serializer.data, status=status.HTTP_201_CREATED
+                )
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['POST', 'DELETE'], url_path='(?P<recipe_id>\d+)/shopping_cart')
+    @action(detail=False, methods=['POST', 'DELETE'],
+            url_path='(?P<recipe_id>\\d+)/shopping_cart')
     def add_to_shopping_cart(self, request, recipe_id):
         """Добавление в корзину."""
         user = request.user
@@ -137,11 +156,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             if request.method == 'POST':
                 recipe.is_in_shopping_cart.add(user)
                 serializer = RecipeFavoriteShoppingCartSerializer(recipe)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(
+                    serializer.data, status=status.HTTP_201_CREATED
+                )
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        
     @action(detail=False, methods=['GET'], url_path='download_shopping_cart')
     def download_shopping_cart(self, request):
         """Скачивание корзины."""
@@ -161,9 +181,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             amount = ingredient['total_amount']
             file_content += f'- {name} - {amount} {unit}\n'
         response = HttpResponse(file_content, content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="shopping_cart.txt"'
+        response['Content-Disposition'] = 'attachment; filename="cart.txt"'
         return response
-    
+
 
 def redirect_from_short_link(request, short_link):
     """Переадресация с короткой ссылки на страницу рецепта."""

@@ -27,19 +27,26 @@ class AbstractUserSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(AbstractUserSerializer):
-    
+
     class Meta:
         model = User
         fields = (
-            'email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', 'avatar',
+            'email', 'id', 'username', 'first_name',
+            'last_name', 'is_subscribed', 'avatar',
         )
 
 
 class UserRegistrationSerializer(AbstractUserSerializer):
     email = serializers.EmailField(required=True, max_length=EMAIL_MAX_LENGTH)
     username = serializers.CharField(required=True, max_length=USER_MAX_LENGTH)
-    first_name = serializers.CharField(required=True, max_length=USER_MAX_LENGTH)
-    last_name = serializers.CharField(required=True, max_length=USER_MAX_LENGTH)
+    first_name = serializers.CharField(
+        required=True,
+        max_length=USER_MAX_LENGTH
+    )
+    last_name = serializers.CharField(
+        required=True,
+        max_length=USER_MAX_LENGTH
+    )
     password = serializers.CharField(required=True, max_length=USER_MAX_LENGTH)
 
     class Meta:
@@ -62,7 +69,10 @@ class UserRegistrationSerializer(AbstractUserSerializer):
         errors = {}
         email = attrs.get('email')
         username = attrs.get('username')
-        if not re.match(PATTERN, username) or User.objects.filter(username=username):
+        if (
+            not re.match(PATTERN, username)
+            or User.objects.filter(username=username)
+        ):
             errors['username'] = 'Неверное имя пользователя.'
         if User.objects.filter(email=email):
             errors['email'] = 'Неверная почта.'
@@ -71,9 +81,8 @@ class UserRegistrationSerializer(AbstractUserSerializer):
         return attrs
 
 
-
 class UserRegisteredSerializer(AbstractUserSerializer):
-    
+
     class Meta:
         model = User
         fields = (
@@ -107,8 +116,11 @@ class FollowSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        return Follow.objects.filter(user=obj.user, following=obj.following).exists()
-    
+        return Follow.objects.filter(
+            user=obj.user,
+            following=obj.following
+        ).exists()
+
     def get_recipes(self, obj):
         request = self.context.get('request')
         recipes_limit = request.query_params.get('recipes_limit')

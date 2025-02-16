@@ -28,7 +28,9 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для связи рецепта с ингредиентами."""
     id = serializers.IntegerField(source='ingredient.id')
     name = serializers.CharField(source='ingredient.name', read_only=True)
-    measurement_unit = serializers.CharField(source='ingredient.measurement_unit', read_only=True)
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit', read_only=True
+    )
 
     class Meta:
         model = RecipeIngredients
@@ -47,7 +49,9 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         abstract = True
         model = Recipe
-        fields = ('id', 'tags', 'author', 'ingredients', 'is_favorited', 'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time')
+        fields = ('id', 'tags', 'author', 'ingredients', 'is_favorited',
+                  'is_in_shopping_cart', 'name', 'image',
+                  'text', 'cooking_time')
 
     def get_ingredients(self, obj):
         """Получение списка ингредиентов для рецепта."""
@@ -58,7 +62,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         """Проверка на наличие рецепта в избранном."""
         user = self.context.get('request').user
         return obj.is_favorited.filter(pk=user.pk).exists()
-    
+
     def get_is_in_shopping_cart(self, obj):
         """Проверка на наличие рецепта в корзине."""
         user = self.context.get('request').user
@@ -82,10 +86,12 @@ class RecipeCreateSerializer(RecipeSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('ingredients', 'tags', 'image', 'name', 'text', 'cooking_time')
+        fields = ('ingredients', 'tags', 'image',
+                  'name', 'text', 'cooking_time')
 
     def validate_ingredients(self, value):
-        """Проверка на корректность добавленных ингредиентов при создании рецепта."""
+        """Проверка на корректность добавленных
+        ингредиентов при создании рецепта."""
         errors = []
         if not value:
             errors.append('Ингредиенты обязательны.')
@@ -101,7 +107,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         if errors:
             raise serializers.ValidationError(errors)
         return value
-    
+
     def validate_tags(self, value):
         """Проверка на корректность выбранных тэгов."""
         errors = []
@@ -117,18 +123,21 @@ class RecipeCreateSerializer(RecipeSerializer):
         if errors:
             raise serializers.ValidationError(errors)
         return value
- 
+
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         recipe_ingredients = [
-            RecipeIngredients(recipe=recipe, ingredient_id=ingr['id'], amount=ingr['amount']) for ingr in ingredients
+            RecipeIngredients(
+                recipe=recipe, ingredient_id=ingr['id'],
+                amount=ingr['amount']
+            ) for ingr in ingredients
         ]
         RecipeIngredients.objects.bulk_create(recipe_ingredients)
         return recipe
-    
+
     def update(self, instance, validated_data):
         ingredients = validated_data.pop('ingredients', None)
         tags = validated_data.pop('tags', None)
@@ -138,7 +147,10 @@ class RecipeCreateSerializer(RecipeSerializer):
             raise serializers.ValidationError('Ингредиенты обязательны.')
         RecipeIngredients.objects.filter(recipe=instance).delete()
         recipe_ingredients = [
-        RecipeIngredients(recipe=instance, ingredient_id=ingr['id'], amount=ingr['amount']) for ingr in ingredients
+            RecipeIngredients(
+                recipe=instance, ingredient_id=ingr['id'],
+                amount=ingr['amount']
+            ) for ingr in ingredients
         ]
         RecipeIngredients.objects.bulk_create(recipe_ingredients)
         instance.tags.set(tags)
@@ -146,12 +158,12 @@ class RecipeCreateSerializer(RecipeSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
-    
+
 
 class RecipeFavoriteShoppingCartSerializer(serializers.ModelSerializer):
-    """Сериализатор для ответа при добавлении рецепта в избранное или корзину."""
+    """Сериализатор для ответа при добавлении
+    рецепта в избранное или корзину."""
 
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
-  

@@ -24,7 +24,7 @@ services:
       - ../frontend/:/app/result_build/
   nginx:
     container_name: foodgram-proxy
-    build: ./infra/
+    build: .
     ports:
       - "8000:80"
     volumes:

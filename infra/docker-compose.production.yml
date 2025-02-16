@@ -20,7 +20,6 @@ services:
       - media:/app/media
   frontend:
     image: rodalen/foodgram_frontend:latest
-    build: ../frontend
     volumes:
       - ../frontend/:/app/result_build/
   nginx:

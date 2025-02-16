@@ -1,13 +1,15 @@
-from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, generics, permissions, status, viewsets
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from .models import Follow
-from .serializers import UserSerializer, UserRegistrationSerializer, UserRegisteredSerializer, FollowSerializer
+from .serializers import (FollowSerializer, UserRegisteredSerializer,
+                          UserRegistrationSerializer, UserSerializer)
+
 
 User = get_user_model()
 

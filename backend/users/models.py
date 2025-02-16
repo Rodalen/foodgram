@@ -1,10 +1,7 @@
-import base64
-
 from django.contrib.auth.models import AbstractUser
-
 from django.db import models
 
-from foodgram.constants import ROLES, EMAIL_MAX_LENGTH, USER_MAX_LENGTH
+from foodgram.constants import EMAIL_MAX_LENGTH, ROLES, USER_MAX_LENGTH
 from foodgram.validators import UsernameValidator
 
 

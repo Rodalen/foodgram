@@ -4,13 +4,15 @@ from django.db import models
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import permissions, generics, permissions, status, viewsets, mixins
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .models import Tag, Ingredient, Recipe, RecipeIngredients
-from .serializers import TagSerializer, IngredientSerializer, RecipeSerializer, RecipeCreateSerializer, RecipeFavoriteShoppingCartSerializer
 from api.permissions import FoodgramPermission
+from .models import Ingredient, Recipe, RecipeIngredients, Tag
+from .serializers import (IngredientSerializer, RecipeCreateSerializer,
+                          RecipeFavoriteShoppingCartSerializer,
+                          RecipeSerializer, TagSerializer)
 
 
 class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin):

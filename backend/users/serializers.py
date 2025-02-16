@@ -3,10 +3,10 @@ import re
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from foodgram.constants import EMAIL_MAX_LENGTH, USER_MAX_LENGTH, PATTERN
+from foodgram.constants import EMAIL_MAX_LENGTH, PATTERN, USER_MAX_LENGTH
 from foodgram.helpers_serializers import Base64ImageField
-from .models import Follow
 from recipes.models import Recipe
+from .models import Follow
 
 
 User = get_user_model()

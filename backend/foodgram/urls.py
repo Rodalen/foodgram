@@ -3,6 +3,7 @@ from django.urls import include, path
 
 from recipes.views import redirect_from_short_link
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),

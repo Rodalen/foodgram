@@ -1,8 +1,9 @@
 from django.urls import include, path
+from recipes.views import IngredientViewSet, RecipeViewSet, TagViewSet
 from rest_framework.routers import SimpleRouter
 
-from users.views import UserViewSet, GetToken, DeleteToken
-from recipes.views import TagViewSet, IngredientViewSet, RecipeViewSet
+from users.views import DeleteToken, GetToken, UserViewSet
+
 
 v1_router = SimpleRouter()
 v1_router.register('users', UserViewSet, basename='users')

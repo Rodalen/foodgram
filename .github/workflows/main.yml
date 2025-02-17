@@ -91,6 +91,16 @@ jobs:
           source: "docker-compose.production.yml"
           target: "foodgram"
 
+      - name: Copy nginx.conf
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          source: "nginx/nginx.conf"
+          target: "foodgram/nginx/"
+
       - name: Executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
         with:
@@ -103,7 +113,10 @@ jobs:
             sudo docker compose -f docker-compose.production.yml pull
             sudo docker compose -f docker-compose.production.yml down
             sudo docker compose -f docker-compose.production.yml up -d
+            sudo docker compose -f docker-compose.production.yml exec backend python manage.py makemigrations
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+            sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --no-input
+            sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /app/backend_static/static/
 
 # Телеграм
   send_message:

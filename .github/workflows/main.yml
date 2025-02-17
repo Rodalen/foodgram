@@ -66,7 +66,7 @@ jobs:
         - name: Push to DockerHub
           uses: docker/build-push-action@v4
           with:
-            context: ./infra/
+            context: ./nginx/
             push: true
             tags: rodalen/foodgram_gateway:latest
 
@@ -88,7 +88,7 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: "infra/docker-compose.production.yml"
+          source: "docker-compose.production.yml"
           target: "foodgram"
 
       - name: Executing remote ssh commands to deploy

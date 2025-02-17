@@ -63,7 +63,7 @@ class Recipe(models.Model):
     )
 
     class Meta:
-        ordering = ('created_at',)
+        ordering = ('-created_at',)
 
 
 class RecipeIngredients(models.Model):

@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from api.permissions import FoodgramPermission
@@ -50,6 +51,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('author',)
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         """Фильтрация по тэгам, избранному, корзине."""

@@ -12,7 +12,7 @@ services:
       - pg_data_foodgram:/var/lib/postgresql/data
   backend:
     image: rodalen/foodgram_backend:latest
-    depends_on: 
+    depends_on:
       - db
     env_file: .env
     volumes:

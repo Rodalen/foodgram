@@ -13,11 +13,22 @@ class Tag(models.Model):
     name = models.CharField(max_length=TAG_MAX_LENGTH, unique=True)
     slug = models.SlugField(max_length=TAG_MAX_LENGTH, unique=True)
 
+    class Meta:
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+
+    def __str__(self):
+        return self.slug
+
 
 class Ingredient(models.Model):
     """Модель ингредиента."""
     name = models.CharField(max_length=128)
     measurement_unit = models.CharField(max_length=64, default=None)
+
+    class Meta:
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
 
 
 class Recipe(models.Model):
@@ -63,6 +74,8 @@ class Recipe(models.Model):
     )
 
     class Meta:
+        verbose_name = 'Рецепт'
+        verbose_name_plural = 'Рецепты'
         ordering = ('-created_at',)
 
 
@@ -75,3 +88,7 @@ class RecipeIngredients(models.Model):
     amount = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1),]
     )
+
+    class Meta:
+        verbose_name = 'Ингредиенты рецепта'
+        verbose_name_plural = 'Ингредиенты рецептов'

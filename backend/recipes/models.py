@@ -37,7 +37,7 @@ class Recipe(models.Model):
     text = models.TextField(blank=False)
     tags = models.ManyToManyField(Tag, blank=False, related_name='recipes')
     cooking_time = models.PositiveIntegerField(
-        validators=[MinValueValidator(1),]
+        validators=[MinValueValidator(1), ]
     )
     author = models.ForeignKey(
         User,
@@ -86,7 +86,7 @@ class RecipeIngredients(models.Model):
     )
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     amount = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1),]
+        validators=[MinValueValidator(1), ]
     )
 
     class Meta:

@@ -9,7 +9,7 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=USER_MAX_LENGTH,
         unique=True,
-        validators=[UsernameValidator,]
+        validators=[UsernameValidator, ]
     )
     email = models.EmailField(
         max_length=EMAIL_MAX_LENGTH, blank=False, unique=True

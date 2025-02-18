@@ -54,7 +54,7 @@ class UserViewSet(viewsets.ModelViewSet):
             status=status.HTTP_204_NO_CONTENT
         )
 
-    @action(detail=False, methods=['GET',],
+    @action(detail=False, methods=['GET', ],
             url_path='me',
             permission_classes=[permissions.IsAuthenticated])
     def me(self, request, *args, **kwargs):
@@ -62,7 +62,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(user, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['PUT', 'DELETE',],
+    @action(detail=False, methods=['PUT', 'DELETE', ],
             url_path='me/avatar',
             permission_classes=[permissions.IsAuthenticated])
     def avatar(self, request, *args, **kwargs):
@@ -156,7 +156,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class GetToken(generics.CreateAPIView):
-    permission_classes = [permissions.AllowAny,]
+    permission_classes = [permissions.AllowAny, ]
 
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
@@ -181,7 +181,7 @@ class GetToken(generics.CreateAPIView):
 
 class DeleteToken(generics.DestroyAPIView):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated,]
+    permission_classes = [permissions.IsAuthenticated, ]
 
     def post(self, request, *args, **kwargs):
         token = get_object_or_404(Token.objects.filter(user=request.user))

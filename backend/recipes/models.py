@@ -5,7 +5,8 @@ from django.db import models
 from foodgram.constants import (TAG_MAX_LENGTH,
                                 INGREDIENT_NAME_MAX_LENGTH,
                                 MEASUREMENT_UNIT_MAX_LENGTH,
-                                RECIPE_NAME_MAX_LENGT)
+                                RECIPE_NAME_MAX_LENGTH,
+                                SHORT_LINK_MAX_LENGTH)
 
 
 User = get_user_model()
@@ -55,7 +56,7 @@ class Ingredient(models.Model):
 class Recipe(models.Model):
     """Модель рецепта."""
     name = models.CharField(
-        max_length=RECIPE_NAME_MAX_LENGT,
+        max_length=RECIPE_NAME_MAX_LENGTH,
         verbose_name='Блюдо',
         help_text='Название рецепта.'
     )
@@ -103,12 +104,12 @@ class Recipe(models.Model):
         help_text='Ингредиенты и их количество для приготовления блюда.'
     )
     short_link = models.CharField(
-        max_length=32,
+        max_length=SHORT_LINK_MAX_LENGTH,
         unique=True,
         blank=True,
         null=True,
-        verbose_name='Краткая ссылка',
-        help_text='Краткая ссылка на рецепт.'
+        verbose_name='Короткая ссылка',
+        help_text='Короткая ссылка на рецепт.'
     )
 
     class Meta:
@@ -147,7 +148,7 @@ class RecipeIngredients(models.Model):
         verbose_name_plural = 'Ингредиенты рецептов'
 
 
-class IsFavorited(models.Model):
+class Favorited(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='favorite_recipes'
     )
@@ -165,7 +166,7 @@ class IsFavorited(models.Model):
         ]
 
 
-class IsInShoppingCart(models.Model):
+class ShoppingCart(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='shopping_cart_recipes'
     )

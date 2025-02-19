@@ -6,12 +6,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from recipes.models import User
 from .models import Follow
 from .serializers import (FollowSerializer, UserRegisteredSerializer,
                           UserRegistrationSerializer, UserSerializer)
-
-
-User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -140,19 +138,15 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         elif request.method == 'DELETE':
-            if Follow.objects.filter(user=user, following=following).exists():
-                follow = get_object_or_404(
-                    Follow,
-                    user=user,
-                    following=following
-                )
-                follow.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(
-                    {'error': 'Вы не подписаны на этого пользователя.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            follow = get_object_or_404(
+                Follow,
+                user=user,
+                following=following
+            )
+            if not follow:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            follow.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class GetToken(generics.CreateAPIView):

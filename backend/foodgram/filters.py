@@ -3,16 +3,11 @@ import django_filters
 from django.db.models import Q
 from rest_framework import filters
 
-from recipes.models import Recipe, Tag, IsFavorited, IsInShoppingCart
+from recipes.models import Recipe, Tag, Favorited, ShoppingCart
 
 
 class NameFilter(filters.SearchFilter):
-    def filter_queryset(self, request, queryset, view):
-        name = request.query_params.get('name')
-        if name:
-            return queryset.filter(Q(name__istartswith=name)
-                                   | Q(name__icontains=name))
-        return queryset
+    search_param = 'name'
 
 
 class RecipeFilter(django_filters.FilterSet):
@@ -36,7 +31,7 @@ class RecipeFilter(django_filters.FilterSet):
     def filter_is_favorited(self, queryset, name, value):
         user = self.request.user
         if user.is_authenticated and value == 1:
-            favorite_ids = IsFavorited.objects.filter(
+            favorite_ids = Favorited.objects.filter(
                 user=user
             ).values_list('recipe_id', flat=True)
             return queryset.filter(id__in=favorite_ids)
@@ -45,7 +40,7 @@ class RecipeFilter(django_filters.FilterSet):
     def filter_is_in_shopping_cart(self, queryset, name, value):
         user = self.request.user
         if user.is_authenticated and value == 1:
-            cart_ids = IsInShoppingCart.objects.filter(
+            cart_ids = ShoppingCart.objects.filter(
                 user=user
             ).values_list('recipe_id', flat=True)
             return queryset.filter(id__in=cart_ids)

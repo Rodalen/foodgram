@@ -12,11 +12,11 @@ from rest_framework.response import Response
 from api.permissions import FoodgramPermission
 from foodgram.filters import NameFilter, RecipeFilter
 from .models import (Ingredient, Recipe, RecipeIngredients,
-                     Tag, IsFavorited, IsInShoppingCart)
+                     Tag, Favorited, ShoppingCart)
 from .serializers import (IngredientSerializer, RecipeCreateSerializer,
                           RecipeFavoriteShoppingCartSerializer,
                           RecipeSerializer, TagSerializer,
-                          IsFavoritedSerializer, IsInShoppingCartSerializer)
+                          FavoritedSerializer, ShoppingCartSerializer)
 
 
 class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
@@ -36,6 +36,7 @@ class IngredientViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
     serializer_class = IngredientSerializer
     pagination_class = None
     filter_backends = [NameFilter, ]
+    search_fields = ['name', ]
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -60,7 +61,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             partial=(instance is not None)
         )
         serializer.is_valid(raise_exception=True)
-        if not (request.data.get('image') or instance):
+        if not request.data.get('image') and not instance:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if instance:
             recipe = serializer.save()
@@ -132,7 +133,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.create_object(
             request=request,
             pk=recipe_id,
-            serializer_class=IsFavoritedSerializer
+            serializer_class=FavoritedSerializer
         )
 
     @favorite.mapping.delete
@@ -141,7 +142,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.delete_object(
             request=request,
             pk=recipe_id,
-            model=IsFavorited
+            model=Favorited
         )
 
     @action(detail=False, methods=['POST'],
@@ -152,7 +153,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.create_object(
             request=request,
             pk=recipe_id,
-            serializer_class=IsInShoppingCartSerializer
+            serializer_class=ShoppingCartSerializer
         )
 
     @shopping_cart.mapping.delete
@@ -161,7 +162,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.delete_object(
             request=request,
             pk=recipe_id,
-            model=IsInShoppingCart
+            model=ShoppingCart
         )
 
     @action(detail=False, methods=['GET'], url_path='download_shopping_cart')
@@ -169,7 +170,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Скачивание корзины."""
         user = request.user
         recipes = [
-            item.recipe for item in IsInShoppingCart.objects.filter(
+            item.recipe for item in ShoppingCart.objects.filter(
                 user=user
             ).select_related('recipe')
         ]

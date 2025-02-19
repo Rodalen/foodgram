@@ -11,7 +11,7 @@ class User(AbstractUser, ValidationMixin):
         unique=True,
         validators=[ValidationMixin.username_validator, ]
     )
-    email = models.EmailField(  
+    email = models.EmailField(
         max_length=EMAIL_MAX_LENGTH, unique=True
     )
     first_name = models.CharField(max_length=USER_MAX_LENGTH, blank=False)

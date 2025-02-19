@@ -102,20 +102,6 @@ class Recipe(models.Model):
         verbose_name='Ингредиенты',
         help_text='Ингредиенты и их количество для приготовления блюда.'
     )
-    # is_favorited = models.ManyToManyField(
-    #     User,
-    #     related_name='favorite_recipes',
-    #     blank=True,
-    #     verbose_name='Избранное',
-    #     help_text='Показывает, находится рецепт в избранном или нет.'
-    # )
-    # is_in_shopping_cart = models.ManyToManyField(
-    #     User,
-    #     related_name='shopping_cart_recipes',
-    #     blank=True,
-    #     verbose_name='Корзина',
-    #     help_text='Показывает, находится рецепт в корзине или нет.'
-    # )
     short_link = models.CharField(
         max_length=32,
         unique=True,

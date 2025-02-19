@@ -11,10 +11,11 @@ from rest_framework.response import Response
 
 from api.permissions import FoodgramPermission
 from foodgram.filters import NameFilter, RecipeFilter
-from .models import Ingredient, Recipe, RecipeIngredients, Tag
+from .models import Ingredient, Recipe, RecipeIngredients, Tag, IsFavorited, IsInShoppingCart
 from .serializers import (IngredientSerializer, RecipeCreateSerializer,
                           RecipeFavoriteShoppingCartSerializer,
-                          RecipeSerializer, TagSerializer)
+                          RecipeSerializer, TagSerializer,
+                          IsFavoritedSerializer, IsInShoppingCartSerializer)
 
 
 class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
@@ -91,57 +92,86 @@ class RecipeViewSet(viewsets.ModelViewSet):
         url = f"{request.get_host()}/s/{recipe.short_link}"
         return Response({'short-link': url}, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['POST', 'DELETE'],
+    @staticmethod
+    def create_object(request, pk, serializer_class):
+        """Метод для создания объектов."""
+        user = request.user.id
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if not recipe:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = serializer_class(
+            data={'user': user, 'recipe': pk},
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer = RecipeFavoriteShoppingCartSerializer(
+            recipe, context={'request': request}
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def delete_object(request, pk, model):
+        """Метод для удаления объектов."""
+        user = request.user.id
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if not recipe:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        obj = model.objects.filter(user=user, recipe=recipe)
+        if not obj.exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        obj.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['POST'],
+            permission_classes=[permissions.IsAuthenticated],
             url_path=r'(?P<recipe_id>\d+)/favorite')
-    def add_favorite(self, request, recipe_id):
-        """Добавление в избранное."""
-        user = request.user
-        recipe = get_object_or_404(Recipe, pk=recipe_id)
-        if request.method == 'POST':
-            if recipe.is_favorited.filter(pk=user.id).exists():
-                return Response(
-                    {'error': 'Рецепт уже добавлен в избранное.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            recipe.is_favorited.add(user)
-            serializer = RecipeFavoriteShoppingCartSerializer(recipe, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            if not recipe.is_favorited.filter(pk=user.id).exists():
-                return Response(
-                    {'error': 'Рецепт отсутствует в избранном.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            recipe.is_favorited.remove(user)
-            return Response(status=status.HTTP_204_NO_CONTENT)
+    def favorite(self, request, recipe_id):
+        """Добавление рецепта в избранное."""
+        return self.create_object(
+            request=request,
+            pk=recipe_id,
+            serializer_class=IsFavoritedSerializer
+        )
 
-    @action(detail=False, methods=['POST', 'DELETE'],
+    @favorite.mapping.delete
+    def delete_favorite(self, request, recipe_id):
+        """Удаление рецепта из избранного."""
+        return self.delete_object(
+            request=request,
+            pk=recipe_id,
+            model=IsFavorited
+        )
+
+    @action(detail=False, methods=['POST'],
+            permission_classes=[permissions.IsAuthenticated],
             url_path=r'(?P<recipe_id>\d+)/shopping_cart')
-    def add_to_shopping_cart(self, request, recipe_id):
-        """Добавление в корзину."""
-        user = request.user
-        recipe = get_object_or_404(Recipe, pk=recipe_id)
+    def shopping_cart(self, request, recipe_id):
+        """Добавление рецепта в корзину."""
+        return self.create_object(
+            request=request,
+            pk=recipe_id,
+            serializer_class=IsInShoppingCartSerializer
+        )
 
-        if request.method == 'POST':
-            if recipe.is_in_shopping_cart.filter(pk=user.id).exists():
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            recipe.is_in_shopping_cart.add(user)
-            serializer = RecipeFavoriteShoppingCartSerializer(
-                recipe, context={'request': request}
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        elif request.method == 'DELETE':
-            if not recipe.is_in_shopping_cart.filter(pk=user.id).exists():
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            recipe.is_in_shopping_cart.remove(user)
-            return Response(status=status.HTTP_204_NO_CONTENT)
+    @shopping_cart.mapping.delete
+    def delete_shopping_cart(self, request, recipe_id):
+        """Удаление рецепта из корзины."""
+        return self.delete_object(
+            request=request,
+            pk=recipe_id,
+            model=IsInShoppingCart
+        )
 
     @action(detail=False, methods=['GET'], url_path='download_shopping_cart')
     def download_shopping_cart(self, request):
         """Скачивание корзины."""
         user = request.user
-        recipes = user.shopping_cart_recipes.all()
+        recipes = [
+            item.recipe for item in IsInShoppingCart.objects.filter(
+                user=user
+            ).select_related('recipe')
+        ]
         cart = ['Список покупок:\n\n']
         ingredients = (
             RecipeIngredients.objects

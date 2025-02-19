@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 
 from users.serializers import UserSerializer
-from .models import Ingredient, Recipe, RecipeIngredients, Tag
+from .models import Ingredient, Recipe, RecipeIngredients, Tag, IsFavorited, IsInShoppingCart
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -60,12 +60,16 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         """Проверка на наличие рецепта в избранном."""
         user = self.context.get('request').user
-        return obj.is_favorited.filter(pk=user.pk).exists()
+        if user.is_authenticated:
+            return IsFavorited.objects.filter(user=user, recipe=obj).exists()
+        return False
 
     def get_is_in_shopping_cart(self, obj):
         """Проверка на наличие рецепта в корзине."""
         user = self.context.get('request').user
-        return obj.is_in_shopping_cart.filter(pk=user.pk).exists()
+        if user.is_authenticated:
+            return IsInShoppingCart.objects.filter(user=user, recipe=obj).exists()
+        return False
 
 
 class RecipeCreateSerializer(RecipeSerializer):
@@ -162,3 +166,31 @@ class RecipeFavoriteShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class IsFavoritedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IsFavorited
+        fields = ('user', 'recipe')
+
+    def validate(self, data):
+        if IsFavorited.objects.filter(
+            user=data['user'], recipe=data['recipe']
+        ).exists():
+            raise serializers.ValidationError(
+                'Рецепт уже добавлен в избранное.'
+            )
+        return data
+
+
+class IsInShoppingCartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IsInShoppingCart
+        fields = ('user', 'recipe')
+
+    def validate(self, data):
+        if IsInShoppingCart.objects.filter(
+            user=data['user'], recipe=data['recipe']
+        ).exists():
+            raise serializers.ValidationError('Рецепт уже добавлен в корзину.')
+        return data

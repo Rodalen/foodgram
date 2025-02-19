@@ -102,20 +102,20 @@ class Recipe(models.Model):
         verbose_name='Ингредиенты',
         help_text='Ингредиенты и их количество для приготовления блюда.'
     )
-    is_favorited = models.ManyToManyField(
-        User,
-        related_name='favorite_recipes',
-        blank=True,
-        verbose_name='Избранное',
-        help_text='Показывает, находится рецепт в избранном или нет.'
-    )
-    is_in_shopping_cart = models.ManyToManyField(
-        User,
-        related_name='shopping_cart_recipes',
-        blank=True,
-        verbose_name='Корзина',
-        help_text='Показывает, находится рецепт в корзине или нет.'
-    )
+    # is_favorited = models.ManyToManyField(
+    #     User,
+    #     related_name='favorite_recipes',
+    #     blank=True,
+    #     verbose_name='Избранное',
+    #     help_text='Показывает, находится рецепт в избранном или нет.'
+    # )
+    # is_in_shopping_cart = models.ManyToManyField(
+    #     User,
+    #     related_name='shopping_cart_recipes',
+    #     blank=True,
+    #     verbose_name='Корзина',
+    #     help_text='Показывает, находится рецепт в корзине или нет.'
+    # )
     short_link = models.CharField(
         max_length=32,
         unique=True,
@@ -159,3 +159,39 @@ class RecipeIngredients(models.Model):
     class Meta:
         verbose_name = 'Ингредиенты рецепта'
         verbose_name_plural = 'Ингредиенты рецептов'
+
+
+class IsFavorited(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='favorite_recipes'
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name='favorited_by'
+    )
+
+    class Meta:
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранные рецепты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'], name='unique_favorite'
+            )
+        ]
+
+
+class IsInShoppingCart(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='shopping_cart_recipes'
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name='in_shopping_cart_of'
+    )
+
+    class Meta:
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Рецепты в корзине'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'], name='unique_shopping_cart'
+            )
+        ]

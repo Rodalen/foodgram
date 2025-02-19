@@ -88,7 +88,7 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: "docker-compose.production.yml"
+          source: "docker-compose.production.yml,docs/openapi-schema.yml,docs/redoc.html"
           target: "foodgram"
 
       - name: Executing remote ssh commands to deploy
@@ -103,10 +103,10 @@ jobs:
             sudo docker compose -f docker-compose.production.yml pull
             sudo docker compose -f docker-compose.production.yml down
             sudo docker compose -f docker-compose.production.yml up -d
-            sudo docker compose -f docker-compose.production.yml exec backend python manage.py mkdir /recipes/migrations
-            sudo docker compose -f docker-compose.production.yml exec backend python manage.py mkdir /users/migrations
-            sudo docker compose -f docker-compose.production.yml exec backend python manage.py touch /recipes/migrations/__init__.py
-            sudo docker compose -f docker-compose.production.yml exec backend python manage.py touch /users/migrations/__init__.py
+            sudo docker compose -f docker-compose.production.yml exec backend mkdir /recipes/migrations
+            sudo docker compose -f docker-compose.production.yml exec backend mkdir /users/migrations
+            sudo docker compose -f docker-compose.production.yml exec backend touch /recipes/migrations/__init__.py
+            sudo docker compose -f docker-compose.production.yml exec backend touch /users/migrations/__init__.py
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py makemigrations
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --no-input

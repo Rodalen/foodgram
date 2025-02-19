@@ -1,11 +1,10 @@
-from django.contrib.auth import get_user_model
+from django.db import transaction
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from foodgram.helpers_serializers import Base64ImageField
+
 from users.serializers import UserSerializer
 from .models import Ingredient, Recipe, RecipeIngredients, Tag
-
-User = get_user_model()
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -13,7 +12,7 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
-        fields = ('__all__')
+        fields = '__all__'
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -21,7 +20,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ingredient
-        fields = ('__all__')
+        fields = '__all__'
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
@@ -44,7 +43,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     ingredients = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    image = Base64ImageField()
+    image = serializers.ImageField(read_only=True)
 
     class Meta:
         abstract = True
@@ -79,10 +78,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         child=serializers.IntegerField(),
         required=True
     )
-    image = Base64ImageField(
-        required=True,
-        allow_null=False
-    )
+    image = Base64ImageField(required=True)
 
     class Meta:
         model = Recipe
@@ -124,18 +120,23 @@ class RecipeCreateSerializer(RecipeSerializer):
             raise serializers.ValidationError(errors)
         return value
 
-    def create(self, validated_data):
-        ingredients = validated_data.pop('ingredients')
-        tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags)
+    def create_recipe_ingredients(self, recipe, ingredients):
         recipe_ingredients = [
             RecipeIngredients(
-                recipe=recipe, ingredient_id=ingr['id'],
+                recipe=recipe,
+                ingredient_id=ingr['id'],
                 amount=ingr['amount']
             ) for ingr in ingredients
         ]
         RecipeIngredients.objects.bulk_create(recipe_ingredients)
+
+    @transaction.atomic
+    def create(self, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+        recipe = Recipe.objects.create(**validated_data)
+        self.create_recipe_ingredients(recipe, ingredients)
+        recipe.tags.set(tags)
         return recipe
 
     def update(self, instance, validated_data):
@@ -146,13 +147,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         if not ingredients:
             raise serializers.ValidationError('Ингредиенты обязательны.')
         RecipeIngredients.objects.filter(recipe=instance).delete()
-        recipe_ingredients = [
-            RecipeIngredients(
-                recipe=instance, ingredient_id=ingr['id'],
-                amount=ingr['amount']
-            ) for ingr in ingredients
-        ]
-        RecipeIngredients.objects.bulk_create(recipe_ingredients)
+        self.create_recipe_ingredients(instance, ingredients)
         instance.tags.set(tags)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

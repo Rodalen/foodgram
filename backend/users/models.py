@@ -1,24 +1,21 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from foodgram.constants import EMAIL_MAX_LENGTH, ROLES, USER_MAX_LENGTH
-from foodgram.validators import UsernameValidator
+from foodgram.constants import EMAIL_MAX_LENGTH, USER_MAX_LENGTH
+from foodgram.validators import ValidationMixin
 
 
-class User(AbstractUser):
+class User(AbstractUser, ValidationMixin):
     username = models.CharField(
         max_length=USER_MAX_LENGTH,
         unique=True,
-        validators=[UsernameValidator, ]
+        validators=[ValidationMixin.username_validator, ]
     )
     email = models.EmailField(
         max_length=EMAIL_MAX_LENGTH, blank=False, unique=True
     )
     first_name = models.CharField(max_length=USER_MAX_LENGTH, blank=False)
     last_name = models.CharField(max_length=USER_MAX_LENGTH, blank=False)
-    role = models.CharField(
-        max_length=USER_MAX_LENGTH, choices=ROLES, default='user'
-    )
     avatar = models.ImageField(
         upload_to='avatars/',
         null=True,
@@ -36,18 +33,29 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == 'admin' or self.is_superuser
+        return self.is_superuser
 
 
 class Follow(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='following'
+        User,
+        on_delete=models.CASCADE,
+        related_name='following',
+        verbose_name='Подписчик',
+        help_text='Подписчик.'
     )
     following = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='followers'
+        User,
+        on_delete=models.CASCADE,
+        related_name='followers',
+        verbose_name='Автор',
+        help_text='Автор.'
     )
 
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        unique_together = ('user', 'following')
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'following'],
+                                    name='Подписаться можно только один раз.')
+        ]

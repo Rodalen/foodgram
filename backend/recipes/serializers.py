@@ -4,7 +4,8 @@ from rest_framework import serializers
 
 
 from users.serializers import UserSerializer
-from .models import Ingredient, Recipe, RecipeIngredients, Tag, IsFavorited, IsInShoppingCart
+from .models import (Ingredient, Recipe, RecipeIngredients,
+                     Tag, IsFavorited, IsInShoppingCart)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -68,7 +69,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         """Проверка на наличие рецепта в корзине."""
         user = self.context.get('request').user
         if user.is_authenticated:
-            return IsInShoppingCart.objects.filter(user=user, recipe=obj).exists()
+            return IsInShoppingCart.objects.filter(
+                user=user, recipe=obj
+            ).exists()
         return False
 
 

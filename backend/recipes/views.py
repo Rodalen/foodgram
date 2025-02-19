@@ -22,7 +22,7 @@ from .serializers import (IngredientSerializer, RecipeCreateSerializer,
 class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
                  mixins.RetrieveModelMixin):
     """Вьюсет для тэгов."""
-    permission_classes = [permissions.AllowAny,]
+    permission_classes = [permissions.AllowAny, ]
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
@@ -60,7 +60,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             partial=(instance is not None)
         )
         serializer.is_valid(raise_exception=True)
-        if not request.data.get('image'):
+        if not (request.data.get('image') or instance):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if instance:
             recipe = serializer.save()

@@ -6,12 +6,13 @@ from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from api.permissions import FoodgramPermission
 from foodgram.filters import NameFilter, RecipeFilter
-from .models import Ingredient, Recipe, RecipeIngredients, Tag, IsFavorited, IsInShoppingCart
+from .models import (Ingredient, Recipe, RecipeIngredients,
+                     Tag, IsFavorited, IsInShoppingCart)
 from .serializers import (IngredientSerializer, RecipeCreateSerializer,
                           RecipeFavoriteShoppingCartSerializer,
                           RecipeSerializer, TagSerializer,
@@ -43,7 +44,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    pagination_class = LimitOffsetPagination
+    pagination_class = PageNumberPagination
 
     def get_serializer_class(self):
         if self.action in ['create', 'patch', 'partial_update']:
